@@ -1,0 +1,113 @@
+package guis;
+
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.text.DecimalFormat;
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+
+import clases.Conversor;
+
+public class Main extends JFrame {
+
+    private JPanel contentPane;
+
+    public static void main(String[] args) {
+        EventQueue.invokeLater(() -> {
+            try {
+                Main frame = new Main();
+                frame.setVisible(true);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    public Main() {
+        setResizable(false);
+        setTitle("Conversor de unidades y monedas");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setBounds(100, 100, 450, 300);
+
+        // Configuración del panel principal
+        contentPane = new JPanel();
+        contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+        contentPane.setLayout(new BorderLayout(0, 0));
+        setContentPane(contentPane);
+
+        // Panel de selección
+        JPanel panel = new JPanel();
+        panel.setLayout(new GridLayout(2, 1, 10, 10));
+        contentPane.add(panel, BorderLayout.CENTER);
+
+        // ComboBox para seleccionar entre conversores
+        JComboBox<String> cbConversores = new JComboBox<>();
+        cbConversores.setModel(new DefaultComboBoxModel<>(new String[]{
+                "Conversor de monedas", "Conversor de unidades"
+        }));
+        panel.add(cbConversores);
+
+        // Botón "Continuar"
+        JButton btnContinuar = new JButton("Continuar");
+        btnContinuar.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                String opcion = (String) cbConversores.getSelectedItem();
+
+                try {
+                    if (opcion.equals("Conversor de monedas")) {
+                        manejarConversion("Moneda", new String[]{"PEN", "USD", "EUR", "GBP", "JPY", "KRW"});
+                    } else {
+                        manejarConversion("Unidad", new String[]{
+                                "Metro", "Kilometro", "Milla", "Centímetro", "Milímetro", "Decametro"
+                        });
+                    }
+                } catch (IllegalArgumentException ex) {
+                    JOptionPane.showMessageDialog(null, "Conversión no soportada.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+        panel.add(btnContinuar);
+
+        // Etiqueta de título
+        JLabel lblTitulo = new JLabel("<html>Bienvenido al conversor<br>Seleccione una opción</html>");
+        lblTitulo.setHorizontalAlignment(SwingConstants.CENTER);
+        contentPane.add(lblTitulo, BorderLayout.NORTH);
+    }
+
+    // Método genérico para manejar conversiones
+    private void manejarConversion(String tipo, String[] opciones) {
+        String origen = (String) JOptionPane.showInputDialog(
+                null, "Seleccione la " + tipo + " de origen:", tipo + " de Origen",
+                JOptionPane.PLAIN_MESSAGE, null, opciones, opciones[0]);
+
+        String destino = (String) JOptionPane.showInputDialog(
+                null, "Seleccione la " + tipo + " de destino:", tipo + " de Destino",
+                JOptionPane.PLAIN_MESSAGE, null, opciones, opciones[1]);
+
+        String input = JOptionPane.showInputDialog(
+                null, "Ingrese el valor a convertir:", "Conversor de " + tipo,
+                JOptionPane.QUESTION_MESSAGE);
+
+        if (validarEntradaNumerica(input)) {
+            double valor = Double.parseDouble(input);
+            String clave = origen + "->" + destino;
+
+            double resultado = origen.equals("Metro") || origen.equals("PEN")
+                    ? Conversor.invertirConversion(clave, valor)
+                    : Conversor.convertir(clave, valor);
+
+            DecimalFormat df = new DecimalFormat("#.##");
+            JOptionPane.showMessageDialog(null,
+                    "El resultado es: " + df.format(resultado) + " " + destino,
+                    "Resultado", JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            JOptionPane.showMessageDialog(null, "Valor ingresado no válido.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    // Validar que la entrada sea numérica
+    private boolean validarEntradaNumerica(String input) {
+        return input != null && input.matches("^\\d+(\\.\\d+)?$");
+    }
+}
